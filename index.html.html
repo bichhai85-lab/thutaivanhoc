@@ -1,0 +1,414 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thử Tài Văn Học - Offline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM UMD -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      body { font-family: 'Nunito', sans-serif; }
+      .font-poetry { font-family: 'Merriweather', serif; }
+      /* Custom Animations */
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in-up { animation: fade-in-up 0.6s ease-out forwards; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useMemo } = React;
+
+      // --- Constants ---
+      const QUESTIONS = [{"id":1,"question":"Nếu “Đề tài” của tác phẩm trả lời cho câu hỏi “Viết về cái gì?” (phạm vi hiện thực), thì vai trò của “Chủ đề” là gì?","options":[{"id":"A","text":"Là tên gọi của biện pháp tu từ được sử dụng nhiều nhất trong tác phẩm."},{"id":"B","text":"Là tư tưởng, quan điểm cốt lõi mà tác giả gửi gắm qua đề tài, trả lời cho câu hỏi “Nói lên điều gì?”"},{"id":"C","text":"Là người trực tiếp bộc lộ cảm xúc, suy nghĩ trong bài thơ."},{"id":"D","text":"Cách sử dụng ngôn ngữ chính là phong cách được sử dụng."}],"correctAnswerId":"B"},{"id":2,"question":"Điểm khác biệt rõ ràng nhất giữa “Chủ thể trữ tình” và “Tác giả” là gì?","options":[{"id":"A","text":"“Chủ thể trữ tình” chỉ xuất hiện trong thơ, còn “Tác giả” xuất hiện trong văn xuôi."},{"id":"B","text":"“Chủ thể trữ tình” thường xưng “tôi”, còn “Tác giả” có thể dùng đại từ “ta”."},{"id":"C","text":"“Tác giả” là người sáng tạo ra tác phẩm, còn “Chủ thể trữ tình” là tiếng nói biểu đạt cảm xúc, suy tư."},{"id":"D","text":"“Tác giả” là người thật ngoài đời, còn “Chủ thể trữ tình” là hình tượng nghệ thuật, là cái “tôi” cảm xúc được sáng tạo trong tác phẩm."}],"correctAnswerId":"D"},{"id":3,"question":"Giả sử một đoạn thơ có thể hiện ra “thương tiếc” đối với người đã khuất. Vậy, “Giọng điệu” phù hợp nhất để thể hiện cảm xúc này là gì?","options":[{"id":"A","text":"Giọng trầm, xót xa, bi tráng hoặc day dứt."},{"id":"B","text":"Giọng đanh thép mạnh mẽ, hùng hồn."},{"id":"C","text":"Giọng châm biếm, phê phán."},{"id":"D","text":"Giọng điệu hài hước, vui tươi."}],"correctAnswerId":"A"},{"id":4,"question":"Tác giả muốn người đọc “Hiểu rằng tuổi trẻ cần sống có lý tưởng” (Thông điệp). Vậy, một “Bài học” mà học sinh rút ra từ thông điệp này nên tập trung vào điều gì?","options":[{"id":"A","text":"Nhận xét về tác giả đã sử dụng phép so sánh hay ẩn dụ để làm nổi bật hình ảnh tuổi trẻ."},{"id":"B","text":"Nhận định rằng việc xác định lý tưởng là điều không bao giờ thay đổi theo hoàn cảnh sống."},{"id":"C","text":"Bản thân người đọc cần xác định mục tiêu học tập, nỗ lực phấn đấu và hành động cụ thể để thực hiện hóa lý tưởng."},{"id":"D","text":"Nhận ra rằng tuổi trẻ là một đề tài văn học phổ biến trong giai đoạn 1945 – 1975."}],"correctAnswerId":"C"},{"id":5,"question":"Khác biệt cốt lõi về vai trò giữa “Từ ngữ” và “Hình ảnh thơ” trong một đoạn thơ là gì?","options":[{"id":"A","text":"“Từ ngữ” dùng để tạo nhịp, vần, còn “Hình ảnh thơ” chủ yếu dùng để thể hiện cảm xúc."},{"id":"B","text":"“Từ ngữ” luôn mang nghĩa đen, còn “Hình ảnh thơ” luôn mang nghĩa bóng."},{"id":"C","text":"“Từ ngữ” là CHẤT LIỆU (nguyên liệu, phương tiện), còn “Hình ảnh thơ” là SẢN PHẨM (hình tượng, bức tranh) được tạo ra từ chất liệu đó."},{"id":"D","text":"“Từ ngữ” là các đơn vị ngôn ngữ được lựa chọn, còn “Hình ảnh thơ” là các cảm nhận trực quan được miêu tả."}],"correctAnswerId":"C"}];
+      const IMAGES = {"BG_WELCOME":"https://picsum.photos/seed/poetry1/1920/1080","BG_Q1":"https://picsum.photos/seed/landscape_mist/1920/1080","BG_Q2":"https://picsum.photos/seed/landscape_lake/1920/1080","BG_Q3":"https://picsum.photos/seed/landscape_mountain/1920/1080","BG_Q4":"https://picsum.photos/seed/landscape_sunset/1920/1080","BG_Q5":"https://picsum.photos/seed/landscape_forest/1920/1080","BG_RESULT":"https://picsum.photos/seed/poetry_end/1920/1080"};
+      const AUDIO_URLS = {"CORRECT":"https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3","INCORRECT":"https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"};
+
+      // --- Icons Helper ---
+      const Icon = ({ name, size = 24, className = "" }) => {
+        const svgString = {"BookOpen":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/></svg>","User":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/></svg>","School":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m4 6 8-4 8 4\"/><path d=\"m18 10 4 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8l4-2\"/><path d=\"M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4\"/><path d=\"M18 5v17\"/><path d=\"M6 5v17\"/></svg>","MapPin":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/></svg>","CheckCircle2":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m9 12 2 2 4-4\"/></svg>","XCircle":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m15 9-6 6\"/><path d=\"m9 9 6 6\"/></svg>","ArrowRight":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg>","Award":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"8\" r=\"7\"/><polyline points=\"8.21 13.89 7 23 12 20 17 23 15.79 13.88\"/></svg>","RotateCcw":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12\"/><path d=\"M3 3v9h9\"/></svg>","Share2":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"18\" cy=\"5\" r=\"3\"/><circle cx=\"6\" cy=\"12\" r=\"3\"/><circle cx=\"18\" cy=\"19\" r=\"3\"/><line x1=\"8.59\" x2=\"15.42\" y1=\"13.51\" y2=\"17.49\"/><line x1=\"15.41\" x2=\"8.59\" y1=\"6.51\" y2=\"10.49\"/></svg>","Download":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\"/></svg>","CheckCircle":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/></svg>"}[name];
+        if (!svgString) return null;
+        
+        // Inject props into SVG string (simple replacement)
+        const withProps = svgString.replace('width="24"', `width="${size}"`).replace('height="24"', `height="${size}" class="${className}"`);
+        return <span dangerouslySetInnerHTML={{ __html: withProps }} className="inline-flex items-center justify-center" />;
+      };
+
+      // --- Audio Service ---
+      class AudioService {
+        constructor() {
+          this.correctSound = new Audio(AUDIO_URLS.CORRECT);
+          this.incorrectSound = new Audio(AUDIO_URLS.INCORRECT);
+          this.correctSound.volume = 0.5;
+          this.incorrectSound.volume = 0.5;
+        }
+        playCorrect() {
+          this.correctSound.currentTime = 0;
+          this.correctSound.play().catch(e => console.warn("Audio blocked", e));
+        }
+        playIncorrect() {
+          this.incorrectSound.currentTime = 0;
+          this.incorrectSound.play().catch(e => console.warn("Audio blocked", e));
+        }
+      }
+      const audioService = new AudioService();
+
+      // --- Components ---
+
+      const WelcomeScreen = ({ onStart }) => {
+        const [fullName, setFullName] = useState('');
+        const [className, setClassName] = useState('');
+        const [school, setSchool] = useState('');
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (fullName && className && school) {
+            onStart({ fullName, className, school });
+          }
+        };
+
+        return (
+          <div className="w-full max-w-md bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/50 animate-fade-in-up">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <Icon name="BookOpen" className="text-indigo-600" size={40} />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 font-poetry mb-2">Thử Tài Văn Học</h1>
+              <p className="text-indigo-800 font-medium leading-relaxed">
+                Phân biệt các khái niệm cặp khái niệm dễ nhầm lẫn trong khi đọc hiểu văn bản thơ
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Icon name="User" size={16} /> Họ và tên
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
+                  placeholder="Nhập họ và tên của bạn..."
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Icon name="School" size={16} /> Lớp
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={className}
+                  onChange={(e) => setClassName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
+                  placeholder="Ví dụ: 12A1"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Icon name="MapPin" size={16} /> Trường
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={school}
+                  onChange={(e) => setSchool(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none"
+                  placeholder="Tên trường của bạn..."
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all mt-6"
+              >
+                Bắt Đầu Làm Bài
+              </button>
+            </form>
+          </div>
+        );
+      };
+
+      const QuizScreen = ({ question, questionIndex, totalQuestions, onAnswer, onNext }) => {
+        const [selectedOptionId, setSelectedOptionId] = useState(null);
+        const [isAnswered, setIsAnswered] = useState(false);
+        const [feedbackMessage, setFeedbackMessage] = useState(null);
+
+        useEffect(() => {
+          setSelectedOptionId(null);
+          setIsAnswered(false);
+          setFeedbackMessage(null);
+        }, [question.id]);
+
+        const handleOptionClick = (optionId) => {
+          if (isAnswered) return;
+          setSelectedOptionId(optionId);
+          setIsAnswered(true);
+          const isCorrect = optionId === question.correctAnswerId;
+
+          if (isCorrect) {
+            audioService.playCorrect();
+            setFeedbackMessage("Chính xác! Bạn thật tuyệt vời!");
+            if (window.confetti) {
+              window.confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FFC0CB', '#FF69B4', '#FF1493', '#FFD700'],
+              });
+            }
+          } else {
+            audioService.playIncorrect();
+            setFeedbackMessage("Rất tiếc, chưa chính xác rồi!");
+          }
+          onAnswer(isCorrect);
+        };
+
+        return (
+          <div className="w-full max-w-5xl bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[550px]">
+            <div className="w-full md:w-1/3 bg-indigo-900 text-white p-8 flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+              <div className="relative z-10">
+                <div className="text-indigo-300 text-sm font-bold uppercase tracking-wider mb-2">
+                  Câu hỏi {questionIndex + 1}/{totalQuestions}
+                </div>
+                <h2 className="text-2xl font-poetry font-bold leading-relaxed">{question.question}</h2>
+              </div>
+              <div className="relative z-10 mt-8">
+                 <div className="w-12 h-1 bg-indigo-500 rounded mb-4"></div>
+                 <p className="text-indigo-200 text-sm italic">"Thơ ca là tiếng hát của trái tim..."</p>
+              </div>
+            </div>
+
+            <div className="w-full md:w-2/3 p-6 md:p-8 flex flex-col justify-center bg-gray-50/50">
+              <div className="space-y-4">
+                {question.options.map((option) => {
+                  let buttonStyle = "border-gray-200 hover:border-indigo-400 hover:bg-white shadow-sm hover:shadow-md";
+                  let circleStyle = "bg-white text-indigo-700 border-2 border-indigo-100 group-hover:border-indigo-500 group-hover:text-indigo-800";
+                  let textStyle = "text-gray-700 group-hover:text-indigo-900";
+                  let IconComponent = null;
+
+                  if (isAnswered) {
+                    if (option.id === question.correctAnswerId) {
+                      buttonStyle = "border-green-500 bg-green-50 ring-1 ring-green-200";
+                      circleStyle = "bg-green-600 text-white border-green-600";
+                      textStyle = "text-green-900 font-bold";
+                      IconComponent = <Icon name="CheckCircle2" className="text-green-600 shrink-0" />;
+                    } else if (option.id === selectedOptionId) {
+                      buttonStyle = "border-red-500 bg-red-50 ring-1 ring-red-200";
+                      circleStyle = "bg-red-500 text-white border-red-500";
+                      textStyle = "text-red-900 font-bold";
+                      IconComponent = <Icon name="XCircle" className="text-red-600 shrink-0" />;
+                    } else {
+                      buttonStyle = "border-gray-200 opacity-50 bg-gray-50";
+                      circleStyle = "bg-gray-200 text-gray-400 border-gray-200";
+                      textStyle = "text-gray-500";
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleOptionClick(option.id)}
+                      disabled={isAnswered}
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between group ${buttonStyle}`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors duration-200 ${circleStyle}`}>
+                          {option.id}
+                        </span>
+                        <span className={`text-lg font-medium leading-relaxed py-1 ${textStyle}`}>{option.text}</span>
+                      </div>
+                      {IconComponent}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className={`mt-8 transition-all duration-500 ${isAnswered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 invisible'}`}>
+                <div className="flex items-center justify-between border-t border-gray-200 pt-6">
+                  <div className={`text-lg font-bold ${selectedOptionId === question.correctAnswerId ? 'text-green-600' : 'text-red-500'}`}>
+                    {feedbackMessage}
+                  </div>
+                  <button
+                    onClick={onNext}
+                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:bg-indigo-700 hover:shadow-xl transition-all transform hover:scale-105"
+                  >
+                    {questionIndex === totalQuestions - 1 ? 'Xem Kết Quả' : 'Câu kế tiếp'}
+                    <Icon name="ArrowRight" size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const ResultScreen = ({ score, totalQuestions, userInfo, onRestart }) => {
+        const percentage = (score / totalQuestions) * 100;
+        const incorrectCount = totalQuestions - score;
+        let message = "";
+        if (percentage === 100) message = "Xuất sắc! Bạn là một chuyên gia văn học thực thụ!";
+        else if (percentage >= 80) message = "Làm tốt lắm! Kiến thức của bạn rất vững chắc.";
+        else if (percentage >= 50) message = "Khá tốt! Hãy cố gắng ôn tập thêm một chút nhé.";
+        else message = "Đừng nản lòng! Hãy ôn lại bài và thử lại nhé.";
+
+        const handleShare = () => {
+           alert("Tính năng chia sẻ chỉ hoạt động tốt nhất trên phiên bản Online!");
+        };
+
+        return (
+          <div className="w-full max-w-2xl bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 md:p-12 text-center animate-fade-in-up">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <Icon name="Award" className="text-yellow-600" size={48} />
+              </div>
+              <h2 className="text-4xl font-bold text-gray-800 font-poetry mb-2">Cảm ơn bạn!</h2>
+              <p className="text-gray-600 italic">Đã hoàn thành bài khảo nghiệm</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 mb-8 border border-indigo-100">
+              <h3 className="text-xl font-bold text-indigo-900 mb-4">Thành tích của {userInfo.fullName}</h3>
+              <div className="grid grid-cols-2 gap-4 text-left mb-6">
+                 <div>
+                   <span className="text-gray-500 text-sm block">Trường</span>
+                   <span className="font-semibold text-gray-800">{userInfo.school}</span>
+                 </div>
+                 <div>
+                   <span className="text-gray-500 text-sm block">Lớp</span>
+                   <span className="font-semibold text-gray-800">{userInfo.className}</span>
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-green-100 p-4 rounded-xl flex flex-col items-center justify-center border border-green-200">
+                  <div className="flex items-center gap-2 text-green-700 font-bold mb-1">
+                    <Icon name="CheckCircle" size={20} />
+                    <span>Đúng</span>
+                  </div>
+                  <span className="text-3xl font-black text-green-800">{score}</span>
+                </div>
+                <div className="bg-red-100 p-4 rounded-xl flex flex-col items-center justify-center border border-red-200">
+                  <div className="flex items-center gap-2 text-red-700 font-bold mb-1">
+                    <Icon name="XCircle" size={20} />
+                    <span>Sai</span>
+                  </div>
+                  <span className="text-3xl font-black text-red-800">{incorrectCount}</span>
+                </div>
+              </div>
+
+              <div className="text-center">
+                 <div className="text-sm text-gray-500 mb-1">Tổng điểm</div>
+                <div className="text-5xl font-black text-indigo-600 mb-2">
+                  {score}<span className="text-3xl text-gray-400">/{totalQuestions}</span>
+                </div>
+                <p className="text-indigo-700 font-medium">{message}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={onRestart}
+                className="flex items-center justify-center gap-2 px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              >
+                <Icon name="RotateCcw" size={20} /> Làm Lại
+              </button>
+              {/* Hide Share in offline as it usually needs context, but keeping button for layout consistency */}
+            </div>
+          </div>
+        );
+      };
+
+      const App = () => {
+        const [gameState, setGameState] = useState('WELCOME');
+        const [userInfo, setUserInfo] = useState(null);
+        const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+        const [score, setScore] = useState(0);
+
+        const handleStart = (info) => {
+          setUserInfo(info);
+          setGameState('PLAYING');
+          setCurrentQuestionIndex(0);
+          setScore(0);
+        };
+
+        const handleAnswer = (isCorrect) => {
+          if (isCorrect) setScore(s => s + 1);
+        };
+
+        const handleNext = () => {
+          if (currentQuestionIndex < QUESTIONS.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+          } else {
+            setGameState('FINISHED');
+          }
+        };
+
+        const handleRestart = () => {
+          setGameState('WELCOME');
+          setUserInfo(null);
+          setScore(0);
+          setCurrentQuestionIndex(0);
+        };
+
+        const currentBackground = useMemo(() => {
+          if (gameState === 'WELCOME') return IMAGES.BG_WELCOME;
+          if (gameState === 'FINISHED') return IMAGES.BG_RESULT;
+          const bgMap = [IMAGES.BG_Q1, IMAGES.BG_Q2, IMAGES.BG_Q3, IMAGES.BG_Q4, IMAGES.BG_Q5];
+          return bgMap[currentQuestionIndex] || IMAGES.BG_WELCOME;
+        }, [gameState, currentQuestionIndex]);
+
+        return (
+          <div 
+            className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center transition-all duration-1000 ease-in-out relative"
+            style={{ backgroundImage: `url('${currentBackground}')` }}
+          >
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] transition-all duration-1000" />
+            <div className="relative z-10 w-full flex justify-center">
+              {gameState === 'WELCOME' && <WelcomeScreen onStart={handleStart} />}
+              {gameState === 'PLAYING' && (
+                <QuizScreen
+                  question={QUESTIONS[currentQuestionIndex]}
+                  questionIndex={currentQuestionIndex}
+                  totalQuestions={QUESTIONS.length}
+                  onAnswer={handleAnswer}
+                  onNext={handleNext}
+                />
+              )}
+              {gameState === 'FINISHED' && userInfo && (
+                <ResultScreen
+                  score={score}
+                  totalQuestions={QUESTIONS.length}
+                  userInfo={userInfo}
+                  onRestart={handleRestart}
+                />
+              )}
+            </div>
+            <div className="absolute bottom-4 text-white/50 text-xs font-light">
+              © 2024 Ứng dụng Giáo dục Văn học (Phiên bản Offline)
+            </div>
+          </div>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
+  
